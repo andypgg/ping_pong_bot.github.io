@@ -1,0 +1,7 @@
+{
+    "start_param": "ping_pong_game",
+    "web_app_info": {
+        "launch_button_label": "Play Ping Pong",
+        "url": "https://your-domain.com/ping_pong_game.html"
+    }
+}
