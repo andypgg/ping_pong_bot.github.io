@@ -1,7 +1,7 @@
 {
-    "start_param": "ping_pong_game",
+    "start_param": "animated_game",
     "web_app_info": {
-        "launch_button_label": "Play Ping Pong",
+        "launch_button_label": "Play Animated Game",
         "url": "https://andypgg.github.io/ping_pong_bot.github.io/index.html"
     }
 }
