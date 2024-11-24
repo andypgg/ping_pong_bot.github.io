@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animated Game</title>
+    <title>Animated Animal Game</title>
     <style>
         body {
             margin: 0;
@@ -27,80 +27,70 @@
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
-        const BALL_RADIUS = 10;
-        const PADDLE_WIDTH = 10;
-        const PADDLE_HEIGHT = 100;
-        const PADDLE_SPEED = 7;
-        const BALL_SPEED_X = 5;
-        const BALL_SPEED_Y = 5;
 
-        let ball = {
+        let animal = {
             x: WIDTH / 2,
             y: HEIGHT / 2,
-            radius: BALL_RADIUS,
-            speedX: BALL_SPEED_X,
-            speedY: BALL_SPEED_Y
+            radius: 50,
+            color: '#FFD700', // Желтый цвет для зверушки
+            isSad: false
         };
 
-        let leftPaddle = {
-            x: 50,
-            y: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-            width: PADDLE_WIDTH,
-            height: PADDLE_HEIGHT,
-            speed: PADDLE_SPEED
-        };
-
-        let rightPaddle = {
-            x: WIDTH - 50 - PADDLE_WIDTH,
-            y: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-            width: PADDLE_WIDTH,
-            height: PADDLE_HEIGHT,
-            speed: PADDLE_SPEED
-        };
-
-        function drawBall() {
+        function drawAnimal() {
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#fff';
+            ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
+            ctx.fillStyle = animal.color;
             ctx.fill();
             ctx.closePath();
-        }
 
-        function drawPaddle(paddle) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+            if (animal.isSad) {
+                // Рисуем грустное лицо
+                ctx.beginPath();
+                ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFF';
+                ctx.fill();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(animal.x + animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFF';
+                ctx.fill();
+                ctx.closePath();
+            } else {
+                // Рисуем счастливое лицо
+                ctx.beginPath();
+                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(animal.x + animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(animal.x, animal.y, animal.radius / 4, 0, Math.PI, true);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+            }
         }
 
         function updateGame() {
-            ball.x += ball.speedX;
-            ball.y += ball.speedY;
-
-            if (ball.y - ball.radius < 0 || ball.y + ball.radius > HEIGHT) {
-                ball.speedY *= -1;
-            }
-
-            if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
-                ball.y > leftPaddle.y &&
-                ball.y < leftPaddle.y + leftPaddle.height) {
-                ball.speedX *= -1;
-            }
-
-            if (ball.x + ball.radius > rightPaddle.x &&
-                ball.y > rightPaddle.y &&
-                ball.y < rightPaddle.y + rightPaddle.height) {
-                ball.speedX *= -1;
-            }
-
-            if (ball.y < rightPaddle.y + rightPaddle.height / 2) {
-                rightPaddle.y -= rightPaddle.speed;
-            } else {
-                rightPaddle.y += rightPaddle.speed;
-            }
+            // Немного двигаем зверушку
+            animal.x += Math.sin(Date.now() / 100) * 2;
+            animal.y += Math.cos(Date.now() / 100) * 2;
 
             ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawBall();
-            drawPaddle(leftPaddle);
-            drawPaddle(rightPaddle);
+            drawAnimal();
         }
 
         function gameLoop() {
@@ -108,11 +98,8 @@
             requestAnimationFrame(gameLoop);
         }
 
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const root = document.documentElement;
-            const mouseY = e.clientY - rect.top - root.scrollTop;
-            leftPaddle.y = mouseY - leftPaddle.height / 2;
+        canvas.addEventListener('click', () => {
+            animal.isSad = !animal.isSad;
         });
 
         gameLoop();
