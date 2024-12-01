@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animated Animal Game</title>
+    <title>Ping Pong Game</title>
     <style>
         body {
             margin: 0;
@@ -12,36 +12,50 @@
             align-items: center;
             height: 100vh;
             background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
         }
         canvas {
             display: block;
-            background: #000;
+            background: #222;
+            border: 1px solid #fff;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
         }
     </style>
 </head>
 <body>
+
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="score">Score: 0</div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
+
         // Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const user_id = urlParams.get('user_id');
         const username = urlParams.get('username');
         const name = urlParams.get('name');
 
-        // Выводим эти данные в консоль
-        console.log(`User ID: ${user_id}, Username: ${username}, Name: ${name}`);
+        console.log(`User ID: ${user_id}, Username: ${username}, Name: ${name}`); // Проверка параметров
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
 
+        let score = 0;  // Счет игрока
         let animal = {
             x: WIDTH / 2,
             y: HEIGHT / 2,
             radius: 50,
-            color: '#FFD700', // Желтый цвет для зверушки
+            color: '#FFD700', // Желтый цвет для персонажа
             isSad: false
         };
 
@@ -52,8 +66,8 @@
             ctx.fill();
             ctx.closePath();
 
+            // Грустное лицо
             if (animal.isSad) {
-                // Рисуем грустное лицо
                 ctx.beginPath();
                 ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
                 ctx.fillStyle = '#000';
@@ -72,7 +86,7 @@
                 ctx.fill();
                 ctx.closePath();
             } else {
-                // Рисуем счастливое лицо
+                // Счастливое лицо
                 ctx.beginPath();
                 ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
                 ctx.fillStyle = '#000';
@@ -86,7 +100,7 @@
                 ctx.closePath();
 
                 ctx.beginPath();
-                ctx.arc(animal.x, animal.y, animal.radius / 4, 0, Math.PI, true);
+                ctx.arc(animal.x, animal.y + animal.radius / 4, animal.radius / 4, 0, Math.PI, true);
                 ctx.fillStyle = '#000';
                 ctx.fill();
                 ctx.closePath();
@@ -94,21 +108,23 @@
         }
 
         function updateGame() {
-            // Немного двигаем зверушку
+            // Двигаем персонажа немного
             animal.x += Math.sin(Date.now() / 100) * 2;
             animal.y += Math.cos(Date.now() / 100) * 2;
 
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawAnimal();
+            ctx.clearRect(0, 0, WIDTH, HEIGHT); // Очистка canvas
+            drawAnimal(); // Рисование персонажа
+            document.getElementById("score").innerText = `Score: ${score}`; // Обновление счета
         }
 
         function gameLoop() {
             updateGame();
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop); // Перезапуск анимации
         }
 
         canvas.addEventListener('click', () => {
-            animal.isSad = !animal.isSad;
+            animal.isSad = !animal.isSad;  // Переключаем настроение
+            score++;  // Увеличиваем счет
         });
 
         // Начало игры
