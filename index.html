@@ -121,6 +121,138 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                body: JSON.stringify({ user_id, score })
+            });
+        });
+
+        // Запуск игры
+        gameLoop();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            background: #222;
+            border: 1px solid #fff;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        #user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="user-info"></div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const user_id = urlParams.get('user_id');
+        const username = urlParams.get('username');
+        const name = urlParams.get('name');
+        let score = parseInt(urlParams.get('score')) || 0;
+
+        // Отображаем информацию о пользователе
+        document.getElementById('user-info').innerText = `User: ${name} (@${username}, ID: ${user_id})`;
+
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        let animal = {
+            x: WIDTH / 2,
+            y: HEIGHT / 2,
+            radius: 50,
+            color: '#FFD700',
+            isSad: false
+        };
+
+        // Функция для рисования персонажа
+        function drawAnimal() {
+            ctx.beginPath();
+            ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
+            ctx.fillStyle = animal.color;
+            ctx.fill();
+            ctx.closePath();
+
+            // Грустное лицо
+            if (animal.isSad) {
+                ctx.beginPath();
+                ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+            } else {
+                ctx.beginPath();
+                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        // Обновление игры
+        function updateGame() {
+            animal.x += Math.sin(Date.now() / 100) * 2;
+            animal.y += Math.cos(Date.now() / 100) * 2;
+
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            drawAnimal();
+            document.getElementById("score").innerText = `Score: ${score}`;
+        }
+
+        // Основной цикл игры
+        function gameLoop() {
+            updateGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Обработчик клика
+        canvas.addEventListener('click', () => {
+            animal.isSad = !animal.isSad;  // Переключаем настроение
+            score++;  // Увеличиваем счет
+            document.getElementById("score").innerText = `Score: ${score}`;
+
+            // Отправляем обновленные очки на сервер
+            fetch('/update_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     user_id: user_id,
                     score: score
