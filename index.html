@@ -6,91 +6,64 @@
     <title>Ping Pong Game</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #000;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
         }
-        canvas {
-            border: 1px solid #fff;
+        #egg {
+            width: 100px;
+            height: 100px;
+            background-color: gold;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
         }
-        .score {
-            font-size: 30px;
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
-    <div>
-        <h1>Ping Pong Game</h1>
-        <p>Welcome, <span id="username"></span>! Click on the character to earn points.</p>
-        <p class="score">Score: <span id="score">0</span></p>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-    </div>
 
-    <script>
-        const userId = new URLSearchParams(window.location.search).get("user_id");
-        const username = new URLSearchParams(window.location.search).get("username");
-        const userName = new URLSearchParams(window.location.search).get("name");
-        let score = parseInt(new URLSearchParams(window.location.search).get("score") || "0");
+<div id="score">Score: 0</div>
+<div id="egg" onclick="eggClicked()">Click Me!</div>
 
-        // Display username
-        document.getElementById("username").textContent = userName;
+<script>
+    const userId = new URLSearchParams(window.location.search).get('user_id');
+    let score = parseInt(new URLSearchParams(window.location.search).get('score')) || 0;
 
-        // Update score on the page
-        function updateScoreDisplay() {
-            document.getElementById("score").textContent = score;
-        }
+    // Обновляем очки на экране
+    function updateScore() {
+        document.getElementById('score').textContent = "Score: " + score;
+    }
 
-        // Game canvas setup
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+    // Обработчик клика по яйцу
+    function eggClicked() {
+        score++;
+        updateScore();
 
-        // Simple game logic for clicking the ball
-        const ball = {
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            radius: 20,
-            color: 'red'
-        };
+        // Отправляем новый счет на сервер
+        fetch('http://localhost:5000/webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, action: 'click' })
+        })
+        .then(response => response.json())
+        .then(data => console.log('Success:', data))
+        .catch((error) => console.error('Error:', error));
+    }
+</script>
 
-        function drawBall() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = ball.color;
-            ctx.fill();
-            ctx.closePath();
-        }
-
-        function checkCollision(event) {
-            const dist = Math.sqrt(Math.pow(ball.x - event.offsetX, 2) + Math.pow(ball.y - event.offsetY, 2));
-            if (dist < ball.radius) {
-                score++;
-                updateScoreDisplay();
-                // Send updated score to the server
-                fetch(`/update_score?user_id=${userId}&score=${score}`).then(response => {
-                    if (response.ok) {
-                        console.log("Score updated successfully.");
-                    } else {
-                        console.log("Failed to update score.");
-                    }
-                });
-                // Move ball to a new random position
-                ball.x = Math.random() * canvas.width;
-                ball.y = Math.random() * canvas.height;
-                drawBall();
-            }
-        }
-
-        // Update score display and game every time
-        drawBall();
-        canvas.addEventListener("click", checkCollision);
-    </script>
 </body>
 </html>
