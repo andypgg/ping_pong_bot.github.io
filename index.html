@@ -74,7 +74,13 @@
                 score++;
                 updateScoreDisplay();
                 // Send updated score to the server
-                fetch(`/update_score?user_id=${userId}&score=${score}`);
+                fetch(`/update_score?user_id=${userId}&score=${score}`).then(response => {
+                    if (response.ok) {
+                        console.log("Score updated successfully.");
+                    } else {
+                        console.log("Failed to update score.");
+                    }
+                });
                 // Move ball to a new random position
                 ball.x = Math.random() * canvas.width;
                 ball.y = Math.random() * canvas.height;
