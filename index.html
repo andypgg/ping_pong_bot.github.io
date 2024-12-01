@@ -7,261 +7,84 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #000;
-            color: white;
+            background-color: #000;
+            color: #fff;
             font-family: Arial, sans-serif;
             text-align: center;
         }
         canvas {
-            display: block;
-            background: #222;
             border: 1px solid #fff;
         }
-        #score {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        #user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 20px;
-            color: white;
+        .score {
+            font-size: 30px;
         }
     </style>
 </head>
 <body>
+    <div>
+        <h1>Ping Pong Game</h1>
+        <p>Welcome, <span id="username"></span>! Click on the character to earn points.</p>
+        <p class="score">Score: <span id="score">0</span></p>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
 
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="score">Score: 0</div>
-    <div id="user-info"></div>
-    
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const userId = new URLSearchParams(window.location.search).get("user_id");
+        const username = new URLSearchParams(window.location.search).get("username");
+        const userName = new URLSearchParams(window.location.search).get("name");
+        let score = parseInt(new URLSearchParams(window.location.search).get("score") || "0");
 
-        // Получаем параметры из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const user_id = urlParams.get('user_id');
-        const username = urlParams.get('username');
-        const name = urlParams.get('name');
-        let score = parseInt(urlParams.get('score')) || 0;
+        // Display username
+        document.getElementById("username").textContent = userName;
 
-        // Отображаем информацию о пользователе
-        document.getElementById('user-info').innerText = `User: ${name} (@${username}, ID: ${user_id})`;
+        // Update score on the page
+        function updateScoreDisplay() {
+            document.getElementById("score").textContent = score;
+        }
 
-        const WIDTH = canvas.width;
-        const HEIGHT = canvas.height;
+        // Game canvas setup
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-        let animal = {
-            x: WIDTH / 2,
-            y: HEIGHT / 2,
-            radius: 50,
-            color: '#FFD700',
-            isSad: false
+        // Simple game logic for clicking the ball
+        const ball = {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: 20,
+            color: 'red'
         };
 
-        // Функция для рисования персонажа
-        function drawAnimal() {
+        function drawBall() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
-            ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
-            ctx.fillStyle = animal.color;
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
             ctx.fill();
             ctx.closePath();
+        }
 
-            // Грустное лицо
-            if (animal.isSad) {
-                ctx.beginPath();
-                ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-            } else {
-                ctx.beginPath();
-                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
+        function checkCollision(event) {
+            const dist = Math.sqrt(Math.pow(ball.x - event.offsetX, 2) + Math.pow(ball.y - event.offsetY, 2));
+            if (dist < ball.radius) {
+                score++;
+                updateScoreDisplay();
+                // Send updated score to the server
+                fetch(`/update_score?user_id=${userId}&score=${score}`);
+                // Move ball to a new random position
+                ball.x = Math.random() * canvas.width;
+                ball.y = Math.random() * canvas.height;
+                drawBall();
             }
         }
 
-        // Обновление игры
-        function updateGame() {
-            animal.x += Math.sin(Date.now() / 100) * 2;
-            animal.y += Math.cos(Date.now() / 100) * 2;
-
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawAnimal();
-            document.getElementById("score").innerText = `Score: ${score}`;
-        }
-
-        // Основной цикл игры
-        function gameLoop() {
-            updateGame();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Обработчик клика
-        canvas.addEventListener('click', () => {
-            animal.isSad = !animal.isSad;  // Переключаем настроение
-            score++;  // Увеличиваем счет
-            document.getElementById("score").innerText = `Score: ${score}`;
-
-            // Отправляем обновленные очки на сервер
-            fetch('/update_score', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id, score })
-            });
-        });
-
-        // Запуск игры
-        gameLoop();
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping Pong Game</title>
-    <style>
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #000;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        canvas {
-            display: block;
-            background: #222;
-            border: 1px solid #fff;
-        }
-        #score {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        #user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 20px;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="score">Score: 0</div>
-    <div id="user-info"></div>
-    
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // Получаем параметры из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const user_id = urlParams.get('user_id');
-        const username = urlParams.get('username');
-        const name = urlParams.get('name');
-        let score = parseInt(urlParams.get('score')) || 0;
-
-        // Отображаем информацию о пользователе
-        document.getElementById('user-info').innerText = `User: ${name} (@${username}, ID: ${user_id})`;
-
-        const WIDTH = canvas.width;
-        const HEIGHT = canvas.height;
-
-        let animal = {
-            x: WIDTH / 2,
-            y: HEIGHT / 2,
-            radius: 50,
-            color: '#FFD700',
-            isSad: false
-        };
-
-        // Функция для рисования персонажа
-        function drawAnimal() {
-            ctx.beginPath();
-            ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
-            ctx.fillStyle = animal.color;
-            ctx.fill();
-            ctx.closePath();
-
-            // Грустное лицо
-            if (animal.isSad) {
-                ctx.beginPath();
-                ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-            } else {
-                ctx.beginPath();
-                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-            }
-        }
-
-        // Обновление игры
-        function updateGame() {
-            animal.x += Math.sin(Date.now() / 100) * 2;
-            animal.y += Math.cos(Date.now() / 100) * 2;
-
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawAnimal();
-            document.getElementById("score").innerText = `Score: ${score}`;
-        }
-
-        // Основной цикл игры
-        function gameLoop() {
-            updateGame();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Обработчик клика
-        canvas.addEventListener('click', () => {
-            animal.isSad = !animal.isSad;  // Переключаем настроение
-            score++;  // Увеличиваем счет
-            document.getElementById("score").innerText = `Score: ${score}`;
-
-            // Отправляем обновленные очки на сервер
-            fetch('/update_score', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    user_id: user_id,
-                    score: score
-                })
-            });
-        });
-
-        // Начало игры
-        gameLoop();
+        // Update score display and game every time
+        drawBall();
+        canvas.addEventListener("click", checkCollision);
     </script>
 </body>
 </html>
