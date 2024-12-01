@@ -50,7 +50,8 @@
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
 
-        let score = 0;  // Счет игрока
+        // Проверяем, есть ли сохраненный счет в Local Storage
+        let score = parseInt(localStorage.getItem('score')) || 0; // Если нет — начинаем с 0
         let animal = {
             x: WIDTH / 2,
             y: HEIGHT / 2,
@@ -59,6 +60,7 @@
             isSad: false
         };
 
+        // Функция для рисования персонажа
         function drawAnimal() {
             ctx.beginPath();
             ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
@@ -107,6 +109,7 @@
             }
         }
 
+        // Обновление игры
         function updateGame() {
             // Двигаем персонажа немного
             animal.x += Math.sin(Date.now() / 100) * 2;
@@ -117,14 +120,17 @@
             document.getElementById("score").innerText = `Score: ${score}`; // Обновление счета
         }
 
+        // Основной цикл игры
         function gameLoop() {
             updateGame();
             requestAnimationFrame(gameLoop); // Перезапуск анимации
         }
 
+        // Обработчик клика
         canvas.addEventListener('click', () => {
             animal.isSad = !animal.isSad;  // Переключаем настроение
             score++;  // Увеличиваем счет
+            localStorage.setItem('score', score);  // Сохраняем новый счет в Local Storage
         });
 
         // Начало игры
