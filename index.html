@@ -3,138 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animated Animal Game</title>
-    <style>
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-            background: #000;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-            background: #000;
-            margin-bottom: 20px;
-        }
-        #userInfo, #score {
-            font-size: 20px;
-            margin-top: 10px;
-        }
-    </style>
+    <title>Ping Pong Game</title>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="userInfo"></div>
-    <div id="score">Score: 0</div>
-    
+    <h1>Ping Pong Game</h1>
+    <p>Welcome to the game! Click on the character to earn points!</p>
+
+    <div id="score">
+        <p>Score: <span id="scoreValue">0</span></p>
+    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const WIDTH = canvas.width;
-        const HEIGHT = canvas.height;
-
-        let animal = {
-            x: WIDTH / 2,
-            y: HEIGHT / 2,
-            radius: 50,
-            color: '#FFD700', // Желтый цвет для зверушки
-            isSad: false
-        };
-
-        let score = 0; // Изначально очки равны 0
-
-        // Функция для рисования персонажа
-        function drawAnimal() {
-            ctx.beginPath();
-            ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
-            ctx.fillStyle = animal.color;
-            ctx.fill();
-            ctx.closePath();
-
-            if (animal.isSad) {
-                // Рисуем грустное лицо
-                ctx.beginPath();
-                ctx.arc(animal.x, animal.y - animal.radius / 2, animal.radius / 4, 0, Math.PI);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-
-                ctx.beginPath();
-                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#FFF';
-                ctx.fill();
-                ctx.closePath();
-
-                ctx.beginPath();
-                ctx.arc(animal.x + animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#FFF';
-                ctx.fill();
-                ctx.closePath();
-            } else {
-                // Рисуем счастливое лицо
-                ctx.beginPath();
-                ctx.arc(animal.x - animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-
-                ctx.beginPath();
-                ctx.arc(animal.x + animal.radius / 4, animal.y - animal.radius / 4, animal.radius / 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-
-                ctx.beginPath();
-                ctx.arc(animal.x, animal.y, animal.radius / 4, 0, Math.PI, true);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                ctx.closePath();
-            }
-        }
-
-        function updateGame() {
-            // Немного двигаем зверушку
-            animal.x += Math.sin(Date.now() / 100) * 2;
-            animal.y += Math.cos(Date.now() / 100) * 2;
-
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            drawAnimal();
-        }
-
-        function gameLoop() {
-            updateGame();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Получение данных пользователя из URL
+        // Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user_id');
-        const userName = urlParams.get('name');
+        const user_id = urlParams.get('user_id');
         const username = urlParams.get('username');
-        score = parseInt(urlParams.get('your_score')) || 0; // Устанавливаем начальные очки из URL
+        const user_name = urlParams.get('name');
 
-        // Отображаем информацию о пользователе
-        const userInfo = document.getElementById('userInfo');
-        userInfo.textContent = `User: ${userName} (@${username}) | ID: ${userId}`;
+        console.log("User ID: ", user_id);
+        console.log("Username: ", username);
+        console.log("User Name: ", user_name);
 
-        // Отображаем счет
-        const scoreElement = document.getElementById('score');
-        scoreElement.textContent = `Score: ${score}`;
+        // Функция для обновления счета
+        function updateScore() {
+            fetch("http://127.0.0.1:5000/update_score", {  // Запрос на локальный сервер
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user_id: user_id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('scoreValue').textContent = data.score;  // Обновляем счет
+            });
+        }
 
-        // При клике на персонажа увеличиваем очки
-        canvas.addEventListener('click', () => {
-            score += 1;
-            scoreElement.textContent = `Score: ${score}`;
-            animal.isSad = !animal.isSad; // Меняем эмоцию персонажа при клике
-        });
+        // Получаем начальный счет с сервера при загрузке страницы
+        function loadScore() {
+            fetch(`http://127.0.0.1:5000/get_score?user_id=${user_id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.score) {
+                    document.getElementById('scoreValue').textContent = data.score;  // Отображаем текущий счет
+                }
+            });
+        }
 
-        gameLoop();
+        // Событие при клике на персонажа (обновление счета)
+        document.body.addEventListener('click', updateScore);
+
+        // Загрузка начального счета
+        loadScore();
     </script>
 </body>
 </html>
