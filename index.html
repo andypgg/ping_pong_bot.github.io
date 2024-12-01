@@ -21,14 +21,16 @@
             background: #000;
             margin-bottom: 20px;
         }
-        #userInfo {
+        #userInfo, #score {
             font-size: 20px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div id="userInfo"></div>
+    <div id="score">Score: 0</div>
     
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -45,6 +47,9 @@
             isSad: false
         };
 
+        let score = 0; // Изначально очки равны 0
+
+        // Функция для рисования персонажа
         function drawAnimal() {
             ctx.beginPath();
             ctx.arc(animal.x, animal.y, animal.radius, 0, Math.PI * 2);
@@ -107,19 +112,27 @@
             requestAnimationFrame(gameLoop);
         }
 
-        canvas.addEventListener('click', () => {
-            animal.isSad = !animal.isSad;
-        });
-
         // Получение данных пользователя из URL
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id');
         const userName = urlParams.get('name');
         const username = urlParams.get('username');
+        score = parseInt(urlParams.get('your_score')) || 0; // Устанавливаем начальные очки из URL
 
-        // Отображение информации о пользователе
+        // Отображаем информацию о пользователе
         const userInfo = document.getElementById('userInfo');
         userInfo.textContent = `User: ${userName} (@${username}) | ID: ${userId}`;
+
+        // Отображаем счет
+        const scoreElement = document.getElementById('score');
+        scoreElement.textContent = `Score: ${score}`;
+
+        // При клике на персонажа увеличиваем очки
+        canvas.addEventListener('click', () => {
+            score += 1;
+            scoreElement.textContent = `Score: ${score}`;
+            animal.isSad = !animal.isSad; // Меняем эмоцию персонажа при клике
+        });
 
         gameLoop();
     </script>
