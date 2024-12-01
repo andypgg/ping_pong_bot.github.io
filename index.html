@@ -10,17 +10,26 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
             background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
         }
         canvas {
             display: block;
             background: #000;
+            margin-bottom: 20px;
+        }
+        #userInfo {
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="userInfo"></div>
+    
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -101,6 +110,16 @@
         canvas.addEventListener('click', () => {
             animal.isSad = !animal.isSad;
         });
+
+        // Получение данных пользователя из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        const userName = urlParams.get('name');
+        const username = urlParams.get('username');
+
+        // Отображение информации о пользователе
+        const userInfo = document.getElementById('userInfo');
+        userInfo.textContent = `User: ${userName} (@${username}) | ID: ${userId}`;
 
         gameLoop();
     </script>
